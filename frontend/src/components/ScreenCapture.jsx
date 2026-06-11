@@ -1,5 +1,5 @@
 import { useRef,useState,useEffect } from "react";
-
+import {uploadFrame} from "../services/api";
 function ScreenCapture(){
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
@@ -16,6 +16,7 @@ function ScreenCapture(){
         return () => clearInterval(interval);
     }, [stream]);
     
+    
     const startCapture = async () => {
         try {
             const mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
@@ -27,7 +28,9 @@ function ScreenCapture(){
             console.error("Screen sharing failed:", error);
         }
     };
-    const captureFrame = () => {
+
+
+    const captureFrame = async () => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
         if (!video || !canvas) return;
@@ -42,6 +45,12 @@ function ScreenCapture(){
         }
         setPreviousImage(imageData);
         setCapturing(imageData);
+        try {
+            const result = await uploadFrame(imageData);
+            console.log(result);
+        } catch (error) {
+            console.error("Frame upload failed:", error);
+        }
     };
     return (
         <div>
