@@ -45,6 +45,7 @@ function ScreenCapture(){
         }
         setPreviousImage(imageData);
         setCapturing(imageData);
+
         try {
             const result = await uploadFrame(imageData);
             console.log(result);

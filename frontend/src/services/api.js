@@ -1,4 +1,4 @@
-const API_URL="http://localhost:8080/api";
+const API_URL="http://localhost:8000/api";
 
 export const uploadFrame=async(image)=>{
     const response=await fetch(`${API_URL}/upload_frame/`,{

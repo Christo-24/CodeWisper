@@ -20,8 +20,7 @@ SECRET_KEY = 'django-insecure-x)&#3&n($jdu=(as2@e4k295tx18dm*irsu8p2k2!686-3@p-m
 DEBUG = True
 
 ALLOWED_HOSTS = []
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",]
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 
