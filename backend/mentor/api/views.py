@@ -8,5 +8,6 @@ from ..services.ocr_service import (extract_text_from_base_64)
 def upload_frame(request):
     image=request.data.get('image')
     extracted_text = extract_text_from_base_64(image)
-    print(extracted_text)
-    return Response({"text": extracted_text})
+    print("problem: ",extracted_text['problem'])
+    print("code: ",extracted_text['code'])
+    return Response(extracted_text)
