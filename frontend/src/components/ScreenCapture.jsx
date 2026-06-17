@@ -1,5 +1,7 @@
 import { useRef,useState,useEffect } from "react";
 import {uploadFrame} from "../services/api";
+
+
 function ScreenCapture(){
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
