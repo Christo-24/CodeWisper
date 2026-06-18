@@ -1,8 +1,10 @@
 import tempfile
 
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from ..models import LatestCapture
 from ..services.whisper_service import transcribe_audio
 
 from ..services.ocr_service import (extract_text_from_base_64)
@@ -12,12 +14,18 @@ from ..services.ollama_service import ask_mistral
 @api_view(['POST'])
 def upload_frame(request):
     image=request.data.get('image')
+    if not image:
+        return Response({'error': 'image is required'}, status=status.HTTP_400_BAD_REQUEST)
+
     extracted_text = extract_text_from_base_64(image)
-    problem=extracted_text['problem']
-    code=extracted_text['code']
-    hint=ask_mistral(problem, code)
-    return Response({'problem': problem, 'code': code,
-        'hint': hint})
+    problem=extracted_text.get('problem', '')
+    code=extracted_text.get('code', '')
+    
+    LatestCapture.objects.create(problem=problem, code=code)
+
+    return Response({'problem': problem, 'code': code})
+        
+
 
 @api_view(['POST'])
 def transcribe(request):
@@ -28,3 +36,22 @@ def transcribe(request):
         temp_path = temp_audio.name
     text=transcribe_audio(temp_path)
     return Response({'text': text})
+
+
+@api_view(['POST'])
+def mentor(request):
+    question=request.data.get('question')
+    if not question:
+        return Response({'error': 'question is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    latest_capture = LatestCapture.objects.first()
+    if latest_capture is None:
+        return Response(
+            {'error': 'No OCR capture found. Capture a frame first.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    problem = latest_capture.problem
+    code = latest_capture.code
+    answer=ask_mistral(problem, code, question)
+    return Response({'answer': answer})

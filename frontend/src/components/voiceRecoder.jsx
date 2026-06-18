@@ -9,6 +9,7 @@ export default function VoiceRecoder() {
 
 	const [isRecording, setIsRecording] = useState(false);
 	const [transcript, setTranscript] = useState("");
+	const[answer,setAnswer] = useState("");
 
 	const startRecording = async () => {
 		try {
@@ -31,7 +32,7 @@ export default function VoiceRecoder() {
 			console.error("Unable to start recording:", error);
 		}
 	};
-
+	{/* stop capturing and transcribing audio */}
 	const stopRecording = () => {
 		const mediaRecorder = mediaRecorderRef.current;
 
@@ -43,17 +44,56 @@ export default function VoiceRecoder() {
 			const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
 			const formData = new FormData();
 			formData.append("audio", audioBlob, "recording.webm");
+			let questionText = "";
 
 			try {
 				const response = await fetch(API_URL, {
 					method: "POST",
 					body: formData,
 				});
+				if (!response.ok) {
+					throw new Error("Transcription request failed");
+				}
 				const data = await response.json();
-				setTranscript(data.text || "");
+				questionText = data.text || "";
+				setTranscript(questionText);
 			} catch (error) {
 				console.error("Unable to transcribe audio:", error);
+				questionText = "";
 			}
+
+			{/* mentor response*/}
+			if (questionText) {
+				try {
+					const mentorResponse = await fetch("http://localhost:8000/api/mentor/", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							question: questionText,
+						}),
+					});
+
+					if (!mentorResponse.ok) {
+						throw new Error("Mentor request failed");
+					}
+
+					const mentorData = await mentorResponse.json();
+					setAnswer(mentorData.answer || "");
+
+				{/* mentor answer to speech */}
+				const utterance = new SpeechSynthesisUtterance(mentorData.answer || "");
+				utterance.lang = "en-US";
+				utterance.rate = 1;
+				utterance.pitch = 1;
+				utterance.volume = 1;
+				window.speechSynthesis.speak(utterance);
+				} catch (error) {
+					console.error("Unable to get mentor answer:", error);
+				}
+			}
+
 
 			if (streamRef.current) {
 				streamRef.current.getTracks().forEach((track) => track.stop());
@@ -76,6 +116,8 @@ export default function VoiceRecoder() {
 				Stop Recording
 			</button>
 			{transcript ? <p>{transcript}</p> : null}
+			<h3>Mentor's Answer:</h3>
+			<p>{answer}</p>
 		</div>
 	);
 }

@@ -9,7 +9,6 @@ function ScreenCapture(){
     const [stream, setStream] = useState(null);
     const [capturing, setCapturing] = useState(null);
     const[previousimage,setPreviousImage]=useState(null);
-    const[hint,setHint]=useState("");
 
     useEffect(() => {
         if(!stream) return;
@@ -51,7 +50,6 @@ function ScreenCapture(){
 
         try {
             const result = await uploadFrame(imageData);
-            setHint(result.hint);
             console.log(result);
         } catch (error) {
             console.error("Frame upload failed:", error);
@@ -72,10 +70,6 @@ function ScreenCapture(){
                     <img src={capturing} alt="Captured " width="500" />
                 </div>
             )}
-            <div>
-                <h2>Hint</h2>
-                <p>{hint}</p>
-            </div>
         </div>
     );
 }

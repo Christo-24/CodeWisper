@@ -1,16 +1,19 @@
 import requests
 OLLAMA_API_URL = "http://localhost:11434/api/generate"
 
-def ask_mistral(problem,code):
+def ask_mistral(problem,code,question):
     promt=f"""
-You are a senior software enigneer mentoring a junior developer.
+You are Jarvis, a leetcode mentor.
+
 problem:{problem}
 current code:{code}
+user question:{question}
 
 Rules:
+-answer the users question 
+-keep answers consise
 -never give complete solution
--never provide final code
--give short hints
+-if they ask for hint give hint
 -maximum 2 sentences
 -be conversational.
 """
