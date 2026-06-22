@@ -1,3 +1,5 @@
+from ...llms.factory import LLMFactory
+
 from .prompts import EXTRACT_PROBLEM_PROMPT
 from .schemas import ProblemExtractorOutput
 
@@ -7,7 +9,7 @@ from langchain_ollama import ChatOllama
 
 class ProblemExtractorAgent:
     def __init__(self):
-        self.llm = ChatOllama(model="mistral")
+        self.llm = LLMFactory.get_problem_extractor_llm()
         self.prompt = ChatPromptTemplate.from_template(EXTRACT_PROBLEM_PROMPT)
 
     def run(self, ocr_text):
