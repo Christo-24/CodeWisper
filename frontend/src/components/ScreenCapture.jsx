@@ -35,11 +35,14 @@ function ScreenCapture(){
     const captureFrame = async () => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
+        
         if (!video || !canvas) return;
+
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
         const imageData = canvas.toDataURL("image/png");
         if(previousimage===imageData){
             console.log("Same frame captured, skipping...");

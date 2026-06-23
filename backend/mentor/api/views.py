@@ -8,7 +8,9 @@ from ..models import LatestCapture
 from ..services.whisper_service import transcribe_audio
 
 from ..services.ocr_service import (extract_text_from_base_64)
-from ..services.ollama_service import ask_mistral
+
+
+from mentor.graph.workflow import workflow
 
 
 @api_view(['POST'])
@@ -51,7 +53,11 @@ def mentor(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    problem = latest_capture.problem
-    code = latest_capture.code
-    answer=ask_mistral(problem, code, question)
-    return Response({'answer': answer})
+    result=workflow.invoke(
+        {
+            "ocr_text": latest_capture.problem,
+            "code": latest_capture.code,
+            "question": question,
+        }
+    )
+    return Response({'answer': result['answer']})
