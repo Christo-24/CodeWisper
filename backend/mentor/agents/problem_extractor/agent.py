@@ -4,7 +4,7 @@ from .prompts import EXTRACT_PROBLEM_PROMPT
 from .schemas import ProblemExtractorOutput
 
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_ollama import ChatOllama
+
 
 
 class ProblemExtractorAgent:

@@ -23,6 +23,8 @@ Your core rules:
 MENTOR_USER_PROMPT="""
 Problem: {problem_name}
 
+Analyze:{analyze}
+
 Code:
 {code}
 

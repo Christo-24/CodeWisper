@@ -11,3 +11,7 @@ class LLMFactory:
     @staticmethod
     def get_mentor_llm():
         return get_groq_llm()
+    
+    @staticmethod
+    def get_code_analyzer_llm():
+        return get_groq_llm()
