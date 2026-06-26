@@ -10,7 +10,7 @@ from ..services.whisper_service import transcribe_audio
 from ..services.ocr_service import (extract_text_from_base_64)
 
 
-from mentor.graph.workflow import workflow
+from mentor.graph.main_graph import workflow
 
 
 @api_view(['POST'])
