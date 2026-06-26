@@ -1,15 +1,32 @@
 from mentor.agents.mentor_agent.agent import MentorAgent
 from mentor.agents.problem_extractor.agent import ProblemExtractorAgent
 from mentor.agents.code_analyzer.agent import CodeAnalyzerAgent
+from mentor.agents.chat_agent.agent import ChatAgent
+from mentor.agents.supervisor.agent import SupervisorAgent
+
 
 from mentor.models import Conversation 
 
 problem_agent = ProblemExtractorAgent()
 mentor_agent = MentorAgent()
 code_analyzer_agent = CodeAnalyzerAgent()
+chat_agent = ChatAgent()
+supervisor_agent = SupervisorAgent()
+
+def supervisor_node(state):
+    result=supervisor_agent.run(question=state["question"])
+    return{
+        "route": result.route
+    }
+
+def chat_node(state):
+    result=chat_agent.run(question=state["question"])
+    return{
+        "answer": result.answer
+    }
 
 def problem_extraction_node(state):
-    result=problem_agent.run(state["ocr_text"])
+    result=problem_agent.run(ocr_text=state["ocr_text"])
     return{
         "problem_name": result.problem_name
     }

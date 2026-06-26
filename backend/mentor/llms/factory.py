@@ -1,4 +1,4 @@
-from .groq_llm import get_groq_llm
+from .groq_llm import get_groq_llm,get_supervisor_groq_llm
 from .ollama_llm import get_ollama_llm
 
 
@@ -15,3 +15,7 @@ class LLMFactory:
     @staticmethod
     def get_code_analyzer_llm():
         return get_groq_llm()
+
+    @staticmethod
+    def get_supervisor_llm():
+        return get_supervisor_groq_llm()
