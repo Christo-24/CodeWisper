@@ -19,3 +19,6 @@ class LLMFactory:
     @staticmethod
     def get_supervisor_llm():
         return get_supervisor_groq_llm()
+    @staticmethod
+    def get_leetcode_router_llm():
+        return get_supervisor_groq_llm()

@@ -1,3 +1,4 @@
+from mentor.agents.teaching_agent.schemas import TeachingOutput
 from mentor.agents.code_analyzer.schemas import CodeAnalyzerOutput
 from typing import TypedDict
 
@@ -9,3 +10,4 @@ class CodeWispherState(TypedDict):
     code: str
     analyze: CodeAnalyzerOutput 
     answer: str
+    lessons: TeachingOutput
