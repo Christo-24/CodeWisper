@@ -1,0 +1,155 @@
+.lesson-player {
+	width: min(760px, 100%);
+	margin: 24px 0;
+	padding: 24px;
+	border: 1px solid #dde3ea;
+	border-radius: 8px;
+	background: #ffffff;
+	box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+	color: #172033;
+}
+
+.lesson-header {
+	display: flex;
+	justify-content: space-between;
+	gap: 24px;
+	align-items: flex-start;
+	padding-bottom: 18px;
+	border-bottom: 1px solid #eef2f6;
+}
+
+.lesson-label {
+	margin: 0 0 6px;
+	font-size: 12px;
+	font-weight: 700;
+	color: #64748b;
+	text-transform: uppercase;
+}
+
+.lesson-header h2 {
+	margin: 0;
+	font-size: 24px;
+}
+
+.lesson-step {
+	min-width: 180px;
+	font-size: 14px;
+	color: #475569;
+}
+
+.lesson-progress {
+	height: 8px;
+	margin-top: 10px;
+	overflow: hidden;
+	border-radius: 999px;
+	background: #e2e8f0;
+}
+
+.lesson-progress div {
+	height: 100%;
+	background: #2563eb;
+}
+
+.lesson-stage {
+	min-height: 240px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 28px 0;
+}
+
+.speech-bubble,
+.question-card,
+.wait-card,
+.visual-placeholder,
+.lesson-empty {
+	width: 100%;
+	border-radius: 8px;
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	padding: 22px;
+}
+
+.speech-bubble {
+	font-size: 20px;
+	line-height: 1.6;
+}
+
+.question-card h3 {
+	margin: 0;
+	font-size: 20px;
+	line-height: 1.4;
+}
+
+.wait-card,
+.lesson-empty {
+	text-align: center;
+	color: #64748b;
+	font-weight: 600;
+}
+
+.visual-placeholder h3 {
+	margin: 0 0 18px;
+}
+
+.visual-field {
+	display: flex;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.visual-field span,
+.visual-payload span {
+	color: #64748b;
+}
+
+.visual-payload pre {
+	margin: 10px 0 0;
+	padding: 14px;
+	overflow: auto;
+	border-radius: 6px;
+	background: #0f172a;
+	color: #e2e8f0;
+}
+
+.lesson-controls {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+	padding-top: 18px;
+	border-top: 1px solid #eef2f6;
+}
+
+.lesson-controls button {
+	padding: 10px 16px;
+	border: 1px solid #cbd5e1;
+	border-radius: 6px;
+	background: #ffffff;
+	color: #172033;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.lesson-controls button:not(:disabled):hover {
+	border-color: #2563eb;
+	color: #2563eb;
+}
+
+.lesson-controls button:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+@media (max-width: 640px) {
+	.lesson-player {
+		padding: 18px;
+	}
+
+	.lesson-header {
+		flex-direction: column;
+	}
+
+	.lesson-step {
+		width: 100%;
+	}
+}

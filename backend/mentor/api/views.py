@@ -60,4 +60,12 @@ def mentor(request):
             "question": question,
         }
     )
-    return Response({'answer': result['answer']})
+    if result.get("lessons") is not None:
+        return Response({
+            "type": "lessons",
+            "data": result["lessons"].model_dump()
+        })
+    return Response({
+        "type": "answer",
+        "data": result['answer']
+    })

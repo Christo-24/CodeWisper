@@ -1,24 +1,15 @@
-import { useRef,useState,useEffect } from "react";
+import { useRef,useState,useEffect,useCallback } from "react";
 import {uploadFrame} from "../services/api";
+import LessonPlayer from "../lesson/components/LessonPlayer/LessonPlayer";
 
 
-function ScreenCapture(){
+function ScreenCapture({ lesson }){
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
 
     const [stream, setStream] = useState(null);
-    const [capturing, setCapturing] = useState(null);
     const[previousimage,setPreviousImage]=useState(null);
 
-    useEffect(() => {
-        if(!stream) return;
-        const interval = setInterval(() => {
-            captureFrame();
-        },3000);
-        return () => clearInterval(interval);
-    }, [stream]);
-    
-    
     const startCapture = async () => {
         try {
             const mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
@@ -32,7 +23,7 @@ function ScreenCapture(){
     };
 
 
-    const captureFrame = async () => {
+    const captureFrame = useCallback(async () => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
         
@@ -49,7 +40,6 @@ function ScreenCapture(){
             return;
         }
         setPreviousImage(imageData);
-        setCapturing(imageData);
 
         try {
             const result = await uploadFrame(imageData);
@@ -57,7 +47,16 @@ function ScreenCapture(){
         } catch (error) {
             console.error("Frame upload failed:", error);
         }
-    };
+    }, [previousimage]);
+
+    useEffect(() => {
+        if(!stream) return;
+        const interval = setInterval(() => {
+            captureFrame();
+        },3000);
+        return () => clearInterval(interval);
+    }, [stream, captureFrame]);
+
     return (
         <div>
             <h1>CodeWisper</h1>
@@ -67,12 +66,7 @@ function ScreenCapture(){
             <br />
             <video ref={videoRef} autoPlay playsInline width="800"/>
             <canvas ref={canvasRef} style={{ display: "none" }} />
-            {capturing && (
-                <div>
-                    <h2>Captured Frame</h2>
-                    <img src={capturing} alt="Captured " width="500" />
-                </div>
-            )}
+            <LessonPlayer lesson={lesson} />
         </div>
     );
 }

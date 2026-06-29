@@ -4,4 +4,4 @@ from pydantic import BaseModel
 
 
 class LeetcodeRouterOutput(BaseModel):
-    route: Literal["code_analyser", "teaching"]
+    route: Literal["code_analyzer", "teaching"]

@@ -11,7 +11,7 @@ builder = StateGraph(CodeWispherState)
 
 builder.add_node("problem_extraction",problem_extraction_node)
 builder.add_node("leetcode_router",leetcode_router_node)
-builder.add_node("code_analysis",code_analyze_node)
+builder.add_node("code_analyze",code_analyze_node)
 builder.add_node("mentor",mentor_node)
 builder.add_node("teaching",teaching_node)
 
@@ -21,11 +21,11 @@ builder.add_conditional_edges(
     "leetcode_router",
     route_question,
     {
-        "code_analyser": "code_analysis",
+        "code_analyzer": "code_analyze",
         "teaching": "teaching",
     }
 )
-builder.add_edge("code_analysis","mentor")
+builder.add_edge("code_analyze","mentor")
 builder.add_edge("mentor",END)
 builder.add_edge("teaching",END)
 

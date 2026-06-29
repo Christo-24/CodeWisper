@@ -1,12 +1,15 @@
+import { useState } from "react";
 import ScreenCapture from "./components/ScreenCapture";
 import VoiceRecoder from "./components/voiceRecoder";
 
 
 function App() {
+  const [lessonData, setLessonData] = useState(null);
+
   return (
     <div className="App">
-      <ScreenCapture />
-      <VoiceRecoder />
+      <ScreenCapture lesson={lessonData} />
+      <VoiceRecoder onLessonReceived={setLessonData} />
     </div>
   );
 }

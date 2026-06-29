@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 
 const API_URL = "http://localhost:8000/api/transcribe/";
 
-export default function VoiceRecoder() {
+export default function VoiceRecoder({ onLessonReceived }) {
 	const mediaRecorderRef = useRef(null);
 	const audioChunksRef = useRef([]);
 	const streamRef = useRef(null);
@@ -59,7 +59,6 @@ export default function VoiceRecoder() {
 				setTranscript(questionText);
 			} catch (error) {
 				console.error("Unable to transcribe audio:", error);
-				questionText = "";
 			}
 
 			{/* mentor response*/}
@@ -80,15 +79,19 @@ export default function VoiceRecoder() {
 					}
 
 					const mentorData = await mentorResponse.json();
-					setAnswer(mentorData.answer || "");
-
-				{/* mentor answer to speech */}
-				const utterance = new SpeechSynthesisUtterance(mentorData.answer || "");
-				utterance.lang = "en-US";
-				utterance.rate = 1;
-				utterance.pitch = 1;
-				utterance.volume = 1;
-				window.speechSynthesis.speak(utterance);
+					if (mentorData.type === "lessons") {
+						onLessonReceived(mentorData.data);
+					}
+					const answerText = mentorData.type === "answer" ? mentorData.data || "" : "";
+					setAnswer(answerText);
+					if (answerText) {
+						const utterance = new SpeechSynthesisUtterance(answerText);
+						utterance.lang = "en-US";
+						utterance.rate = 1;
+						utterance.pitch = 1;
+						utterance.volume = 1;
+						window.speechSynthesis.speak(utterance);
+					}
 				} catch (error) {
 					console.error("Unable to get mentor answer:", error);
 				}
