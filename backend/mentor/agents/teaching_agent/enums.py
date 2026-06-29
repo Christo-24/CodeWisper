@@ -3,9 +3,7 @@ from enum import Enum
 class LessonStepType(str, Enum):
     SPEECH = "speech"
     VISUAL = "visual"
-    QUESTION = "question"
-    WAIT = "wait"
-    QUIZ = "quiz"
+
 
 class VisualizerType(str, Enum):
     ARRAY = "array"

@@ -8,6 +8,7 @@ import "./LessonPlayer.css";
 export default function LessonPlayer({ lesson }) {
 	const lessonItems = lesson?.lessons || [];
 	const {
+		currentStep,
 		currentStepNumber,
 		totalSteps,
 		currentItem,
@@ -32,11 +33,19 @@ export default function LessonPlayer({ lesson }) {
 
 		if (currentItem.type === "visual") {
 			const Visualizer = getVisualizer(currentItem.visualizer_type);
+			const visualSteps = lessonItems
+				.slice(0, currentStep + 1)
+				.filter(
+					(item) =>
+						item.type === "visual" &&
+						item.visualizer_type === currentItem.visualizer_type,
+				);
 			return (
 				<Visualizer
 					visualizer={currentItem.visualizer_type}
 					action={currentItem.action}
 					payload={currentItem.payload}
+					steps={visualSteps}
 				/>
 			);
 		}

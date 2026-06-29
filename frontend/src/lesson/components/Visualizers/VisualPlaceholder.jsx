@@ -1,7 +1,7 @@
 export default function VisualPlaceholder({ visualizer, action, payload }) {
 	return (
 		<div className="visual-placeholder">
-			<h3>Visualization Placeholder</h3>
+			<h3>Visualizer not implemented yet.</h3>
 			<div className="visual-field">
 				<span>Visualizer:</span>
 				<strong>{visualizer || "unknown"}</strong>
