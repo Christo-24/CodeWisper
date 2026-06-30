@@ -73,9 +73,13 @@ function getArrayState(steps) {
 
 export default function ArrayVisualizer({ action, steps = [] }) {
 	const { values, highlightedIndex, pointerIndex } = getArrayState(steps);
+	const latestStep = steps[steps.length - 1];
+	const animatedIndex = latestStep?.payload?.index;
+	const swapFrom = latestStep?.payload?.from ?? latestStep?.payload?.indexA;
+	const swapTo = latestStep?.payload?.to ?? latestStep?.payload?.indexB;
 
 	return (
-		<div className="visualizer-card">
+		<div className={`visualizer-card visualizer-animate-${action || "ready"}`}>
 			<div className="visualizer-title">
 				<h3>Array</h3>
 				<span>{action || "ready"}</span>
@@ -84,22 +88,48 @@ export default function ArrayVisualizer({ action, steps = [] }) {
 			{values.length === 0 ? (
 				<p className="visualizer-empty">(empty)</p>
 			) : (
-				<div className="array-row">
+				<div
+					className="array-row array-row-animated"
+					style={{
+						"--pointer-index": pointerIndex ?? 0,
+						"--has-pointer": pointerIndex === null ? 0 : 1,
+					}}
+				>
 					{values.map((value, index) => (
-						<div className="array-cell-wrap" key={`${index}-${value}`}>
+						<div
+							className={`array-cell-wrap ${
+								action === "create" ? "is-created" : ""
+							} ${
+								action === "swap" && (index === swapFrom || index === swapTo)
+									? "is-swapping"
+									: ""
+							}`}
+							key={`${index}-${value}`}
+							style={{
+								"--cell-index": index,
+								"--swap-offset":
+									index === swapFrom
+										? (swapTo - swapFrom) * 68
+										: index === swapTo
+											? (swapFrom - swapTo) * 68
+											: 0,
+							}}
+						>
 							<div
 								className={`array-cell ${
 									highlightedIndex === index ? "is-highlighted" : ""
+								} ${
+									action === "update" && animatedIndex === index
+										? "is-updated"
+										: ""
 								}`}
 							>
 								{String(value)}
 							</div>
 							<div className="array-index">{index}</div>
-							<div className="array-pointer">
-								{pointerIndex === index ? "^" : ""}
-							</div>
 						</div>
 					))}
+					<div className="array-motion-pointer">^</div>
 				</div>
 			)}
 		</div>

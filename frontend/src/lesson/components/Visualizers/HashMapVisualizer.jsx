@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useState } from "react";
+
 function getHashMapState(steps) {
 	return steps.reduce(
 		(state, step) => {
@@ -54,24 +56,58 @@ function getHashMapState(steps) {
 }
 
 export default function HashMapVisualizer({ action, steps = [] }) {
-	const { items, highlightedKey, notFoundKey } = getHashMapState(steps);
-	const entries = Object.entries(items);
+	const { items, highlightedKey, notFoundKey } = useMemo(
+		() => getHashMapState(steps),
+		[steps],
+	);
+	const entries = useMemo(() => Object.entries(items), [items]);
+	const latestStep = steps[steps.length - 1];
+	const activeKey = latestStep?.payload?.key;
+	const [displayEntries, setDisplayEntries] = useState(entries);
+	const isRemoving = action === "remove";
+
+	useEffect(() => {
+		if (!isRemoving) {
+			const updateDisplay = window.setTimeout(() => {
+				setDisplayEntries(entries);
+			}, 0);
+
+			return () => window.clearTimeout(updateDisplay);
+		}
+
+		const collapseDisplay = window.setTimeout(() => {
+			setDisplayEntries(entries);
+		}, 360);
+
+		return () => window.clearTimeout(collapseDisplay);
+	}, [entries, isRemoving]);
 
 	return (
-		<div className="visualizer-card">
+		<div className={`visualizer-card visualizer-animate-${action || "ready"}`}>
 			<div className="visualizer-title">
 				<h3>Hash Map</h3>
 				<span>{action || "ready"}</span>
 			</div>
 
-			{entries.length === 0 ? (
+			{displayEntries.length === 0 ? (
 				<p className="visualizer-empty">(empty)</p>
 			) : (
 				<div className="hash-map-grid">
-					{entries.map(([key, value]) => (
+					{displayEntries.map(([key, value]) => (
 						<div
 							className={`hash-map-item ${
 								String(highlightedKey) === key ? "is-highlighted" : ""
+							} ${
+								action === "insert" && String(activeKey) === key
+									? "is-inserting"
+									: ""
+							} ${
+								(action === "lookup" || action === "highlight") &&
+								String(activeKey) === key
+									? "is-pulsing"
+									: ""
+							} ${
+								isRemoving && String(activeKey) === key ? "is-removing" : ""
 							}`}
 							key={key}
 						>
@@ -84,7 +120,9 @@ export default function HashMapVisualizer({ action, steps = [] }) {
 			)}
 
 			{notFoundKey !== null ? (
-				<p className="visualizer-note">Key {String(notFoundKey)} not found.</p>
+				<p className="visualizer-note is-not-found">
+					Key {String(notFoundKey)} not found.
+				</p>
 			) : null}
 		</div>
 	);
