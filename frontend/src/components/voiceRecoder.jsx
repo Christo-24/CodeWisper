@@ -1,8 +1,13 @@
-import { useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { uploadFrame } from "../services/api";
+import { screenShareService } from "../services/screenShareService";
 
 const API_URL = "http://localhost:8000/api/transcribe/";
 
-export default function VoiceRecoder({ onLessonReceived }) {
+const VoiceRecoder = forwardRef(function VoiceRecoder(
+	{ onLessonReceived, onAnswerReceived, onTranscriptReceived, onRecordingChange },
+	ref,
+) {
 	const mediaRecorderRef = useRef(null);
 	const audioChunksRef = useRef([]);
 	const streamRef = useRef(null);
@@ -28,6 +33,7 @@ export default function VoiceRecoder({ onLessonReceived }) {
 
 			mediaRecorder.start();
 			setIsRecording(true);
+			onRecordingChange?.(true);
 		} catch (error) {
 			console.error("Unable to start recording:", error);
 		}
@@ -57,6 +63,7 @@ export default function VoiceRecoder({ onLessonReceived }) {
 				const data = await response.json();
 				questionText = data.text || "";
 				setTranscript(questionText);
+				onTranscriptReceived?.(questionText);
 			} catch (error) {
 				console.error("Unable to transcribe audio:", error);
 			}
@@ -64,6 +71,15 @@ export default function VoiceRecoder({ onLessonReceived }) {
 			{/* mentor response*/}
 			if (questionText) {
 				try {
+					try {
+						const screenFrame = await screenShareService.captureFrame();
+						if (screenFrame) {
+							await uploadFrame(screenFrame);
+						}
+					} catch (error) {
+						console.error("Unable to update screen capture before mentor request:", error);
+					}
+
 					const mentorResponse = await fetch("http://localhost:8000/api/mentor/", {
 						method: "POST",
 						headers: {
@@ -79,11 +95,12 @@ export default function VoiceRecoder({ onLessonReceived }) {
 					}
 
 					const mentorData = await mentorResponse.json();
-					if (mentorData.type === "lessons") {
+					if (mentorData.type === "lessons" || mentorData.type === "lesson") {
 						onLessonReceived(mentorData.data);
 					}
 					const answerText = mentorData.type === "answer" ? mentorData.data || "" : "";
 					setAnswer(answerText);
+					onAnswerReceived?.(answerText);
 					if (answerText) {
 						const utterance = new SpeechSynthesisUtterance(answerText);
 						utterance.lang = "en-US";
@@ -105,10 +122,24 @@ export default function VoiceRecoder({ onLessonReceived }) {
 
 			audioChunksRef.current = [];
 			setIsRecording(false);
+			onRecordingChange?.(false);
 		};
 
 		mediaRecorder.stop();
 	};
+
+	useImperativeHandle(ref, () => ({
+		startRecording,
+		stopRecording,
+		toggleRecording: () => {
+			if (isRecording) {
+				stopRecording();
+			} else {
+				startRecording();
+			}
+		},
+		isRecording,
+	}));
 
 	return (
 		<div>
@@ -123,4 +154,6 @@ export default function VoiceRecoder({ onLessonReceived }) {
 			<p>{answer}</p>
 		</div>
 	);
-}
+});
+
+export default VoiceRecoder;

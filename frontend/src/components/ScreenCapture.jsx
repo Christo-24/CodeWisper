@@ -1,14 +1,14 @@
-import { useRef,useState,useEffect,useCallback } from "react";
-import {uploadFrame} from "../services/api";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { uploadFrame } from "../services/api";
 import LessonPlayer from "../lesson/components/LessonPlayer/LessonPlayer";
 
 
-function ScreenCapture({ lesson }){
+function ScreenCapture({ lesson }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
 
     const [stream, setStream] = useState(null);
-    const[previousimage,setPreviousImage]=useState(null);
+    const [previousimage, setPreviousImage] = useState(null);
 
     const startCapture = async () => {
         try {
@@ -26,7 +26,7 @@ function ScreenCapture({ lesson }){
     const captureFrame = useCallback(async () => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
-        
+
         if (!video || !canvas) return;
 
         canvas.width = video.videoWidth;
@@ -35,7 +35,7 @@ function ScreenCapture({ lesson }){
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         const imageData = canvas.toDataURL("image/png");
-        if(previousimage===imageData){
+        if (previousimage === imageData) {
             console.log("Same frame captured, skipping...");
             return;
         }
@@ -50,10 +50,10 @@ function ScreenCapture({ lesson }){
     }, [previousimage]);
 
     useEffect(() => {
-        if(!stream) return;
+        if (!stream) return;
         const interval = setInterval(() => {
             captureFrame();
-        },3000);
+        }, 3000);
         return () => clearInterval(interval);
     }, [stream, captureFrame]);
 
@@ -64,7 +64,7 @@ function ScreenCapture({ lesson }){
             <button onClick={captureFrame}>Capture Frame</button>
             <br />
             <br />
-            <video ref={videoRef} autoPlay playsInline width="800"/>
+            <video ref={videoRef} autoPlay playsInline width="800" />
             <canvas ref={canvasRef} style={{ display: "none" }} />
             <LessonPlayer lesson={lesson} />
         </div>
