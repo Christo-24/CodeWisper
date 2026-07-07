@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import VoiceRecoder from "./components/voiceRecoder";
 
 import SmokeBackground from "./components/ai/SmokeBackground";
@@ -10,22 +10,18 @@ import LessonPopup from "./components/lessons/LessonPopup";
 import ScreenShareButton from "./components/screenshare/ScreenShareButton";
 
 function App() {
-  const voiceRecorderRef = useRef(null);
   const [lessonData, setLessonData] = useState(null);
   const [showLesson, setShowLesson] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isWakeListening, setIsWakeListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [mentorAnswer, setMentorAnswer] = useState("");
 
-  const handleToggleRecording = () => {
-    voiceRecorderRef.current?.toggleRecording();
-  };
-
-  const handleLessonReceived = (lesson) => {
+  const handleLessonReceived = useCallback((lesson) => {
     setLessonData(lesson);
     setShowLesson(true);
     setMentorAnswer("");
-  };
+  }, []);
 
   return (
     <div className="App">
@@ -116,19 +112,13 @@ function App() {
         `}</style>
 
         <div className="hud-core-layout">
-          {/* Main AI Orb triggers the same recording implementation as the microphone. */}
-          <div
-            onClick={handleToggleRecording}
-            style={{ cursor: 'pointer' }}
-            title={isRecording ? "Stop recording" : "Start recording"}
-          >
+          <div title={isRecording ? "Recording question" : "Say whisper to activate"}>
             <Orb />
           </div>
 
-          {/* Glowing Voice status & input button */}
           <VoiceButton
             isRecording={isRecording}
-            onToggleRecording={handleToggleRecording}
+            isWakeListening={isWakeListening}
           />
         </div>
 
@@ -154,14 +144,14 @@ function App() {
         )}
       </div>
 
-      {/* Mount existing recording logic in the background and control it from the new UI. */}
+      {/* Mount wake-word recording logic in the background. */}
       <div style={{ display: 'none' }}>
         <VoiceRecoder
-          ref={voiceRecorderRef}
           onLessonReceived={handleLessonReceived}
           onAnswerReceived={setMentorAnswer}
           onTranscriptReceived={setTranscript}
           onRecordingChange={setIsRecording}
+          onWakeListeningChange={setIsWakeListening}
         />
       </div>
     </div>
