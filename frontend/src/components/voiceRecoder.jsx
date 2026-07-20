@@ -4,7 +4,8 @@ import { screenShareService } from "../services/screenShareService";
 
 const API_URL = "http://localhost:8000/api/transcribe/";
 const WAKE_WORDS = ["wispher", "whisper"];
-const RECORDING_DURATION_MS = 7000;
+const SILENCE_TIMEOUT_MS = 3000;
+const SILENCE_VOLUME_THRESHOLD = 0.012;
 
 function VoiceRecoder({
 	onLessonReceived,
@@ -12,30 +13,52 @@ function VoiceRecoder({
 	onTranscriptReceived,
 	onRecordingChange,
 	onWakeListeningChange,
+	onTalkReady,
 }) {
 	const mediaRecorderRef = useRef(null);
 	const audioChunksRef = useRef([]);
 	const streamRef = useRef(null);
 	const recognitionRef = useRef(null);
-	const recordingTimerRef = useRef(null);
+	const audioContextRef = useRef(null);
+	const silenceFrameRef = useRef(null);
+	const lastVoiceAtRef = useRef(0);
 	const wakeRestartTimerRef = useRef(null);
 	const isRecordingRef = useRef(false);
+	const isWakeListeningRef = useRef(false);
 	const shouldListenForWakeRef = useRef(true);
+
+	const stopSilenceDetection = useCallback(() => {
+		if (silenceFrameRef.current) {
+			window.cancelAnimationFrame(silenceFrameRef.current);
+			silenceFrameRef.current = null;
+		}
+
+		if (audioContextRef.current) {
+			audioContextRef.current.close().catch(() => {});
+			audioContextRef.current = null;
+		}
+	}, []);
 
 	const startWakeListening = useCallback(() => {
 		const recognition = recognitionRef.current;
-		if (!recognition || !shouldListenForWakeRef.current || isRecordingRef.current) {
+		if (
+			!recognition ||
+			!shouldListenForWakeRef.current ||
+			isRecordingRef.current ||
+			isWakeListeningRef.current
+		) {
 			return;
 		}
 
+		window.clearTimeout(wakeRestartTimerRef.current);
 		try {
 			recognition.start();
-			onWakeListeningChange?.(true);
 		} catch (error) {
 			if (error.name === "InvalidStateError") {
-				onWakeListeningChange?.(true);
+				isWakeListeningRef.current = true;
 			} else {
 				console.error("Unable to start wake word listener:", error);
+				isWakeListeningRef.current = false;
 				onWakeListeningChange?.(false);
 			}
 		}
@@ -48,7 +71,7 @@ function VoiceRecoder({
 			return;
 		}
 
-		window.clearTimeout(recordingTimerRef.current);
+		stopSilenceDetection();
 		mediaRecorder.onstop = async () => {
 			const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
 			const formData = new FormData();
@@ -128,7 +151,60 @@ function VoiceRecoder({
 		};
 
 		mediaRecorder.stop();
-	}, [onLessonReceived, onAnswerReceived, onTranscriptReceived, onRecordingChange, startWakeListening]);
+	}, [
+		onLessonReceived,
+		onAnswerReceived,
+		onTranscriptReceived,
+		onRecordingChange,
+		startWakeListening,
+		stopSilenceDetection,
+	]);
+
+	const startSilenceDetection = useCallback((stream) => {
+		stopSilenceDetection();
+
+		const AudioContext = window.AudioContext || window.webkitAudioContext;
+		if (!AudioContext) {
+			return;
+		}
+
+		const audioContext = new AudioContext();
+		const analyser = audioContext.createAnalyser();
+		const source = audioContext.createMediaStreamSource(stream);
+		const samples = new Uint8Array(analyser.fftSize);
+
+		analyser.fftSize = 2048;
+		source.connect(analyser);
+		audioContextRef.current = audioContext;
+		lastVoiceAtRef.current = Date.now();
+
+		const checkForSilence = () => {
+			if (!isRecordingRef.current) {
+				return;
+			}
+
+			analyser.getByteTimeDomainData(samples);
+			let sum = 0;
+			for (let index = 0; index < samples.length; index += 1) {
+				const level = (samples[index] - 128) / 128;
+				sum += level * level;
+			}
+
+			const volume = Math.sqrt(sum / samples.length);
+			if (volume > SILENCE_VOLUME_THRESHOLD) {
+				lastVoiceAtRef.current = Date.now();
+			}
+
+			if (Date.now() - lastVoiceAtRef.current >= SILENCE_TIMEOUT_MS) {
+				stopRecording();
+				return;
+			}
+
+			silenceFrameRef.current = window.requestAnimationFrame(checkForSilence);
+		};
+
+		silenceFrameRef.current = window.requestAnimationFrame(checkForSilence);
+	}, [stopRecording, stopSilenceDetection]);
 
 	const startRecording = useCallback(async () => {
 		if (isRecordingRef.current) {
@@ -137,7 +213,15 @@ function VoiceRecoder({
 
 		try {
 			isRecordingRef.current = true;
-			recognitionRef.current?.stop();
+			window.clearTimeout(wakeRestartTimerRef.current);
+			try {
+				recognitionRef.current?.abort();
+			} catch (error) {
+				if (error.name !== "InvalidStateError") {
+					console.error("Unable to pause wake word listener:", error);
+				}
+			}
+			isWakeListeningRef.current = false;
 			onWakeListeningChange?.(false);
 
 			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -155,14 +239,26 @@ function VoiceRecoder({
 
 			mediaRecorder.start();
 			onRecordingChange?.(true);
-			recordingTimerRef.current = window.setTimeout(stopRecording, RECORDING_DURATION_MS);
+			startSilenceDetection(stream);
 		} catch (error) {
 			console.error("Unable to start recording:", error);
+			stopSilenceDetection();
 			isRecordingRef.current = false;
 			onRecordingChange?.(false);
 			startWakeListening();
 		}
-	}, [onRecordingChange, onWakeListeningChange, startWakeListening, stopRecording]);
+	}, [
+		onRecordingChange,
+		onWakeListeningChange,
+		startSilenceDetection,
+		startWakeListening,
+		stopSilenceDetection,
+	]);
+
+	useEffect(() => {
+		onTalkReady?.(startRecording);
+		return () => onTalkReady?.(null);
+	}, [onTalkReady, startRecording]);
 
 	useEffect(() => {
 		const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -178,6 +274,11 @@ function VoiceRecoder({
 		recognition.interimResults = true;
 		recognition.lang = "en-US";
 
+		recognition.onstart = () => {
+			isWakeListeningRef.current = true;
+			onWakeListeningChange?.(true);
+		};
+
 		recognition.onresult = (event) => {
 			const latestResult = event.results[event.results.length - 1];
 			const spokenText = latestResult?.[0]?.transcript?.toLowerCase() || "";
@@ -187,6 +288,7 @@ function VoiceRecoder({
 		};
 
 		recognition.onend = () => {
+			isWakeListeningRef.current = false;
 			onWakeListeningChange?.(false);
 			if (shouldListenForWakeRef.current && !isRecordingRef.current) {
 				wakeRestartTimerRef.current = window.setTimeout(startWakeListening, 300);
@@ -196,6 +298,7 @@ function VoiceRecoder({
 		recognition.onerror = (event) => {
 			if (event.error === "not-allowed" || event.error === "service-not-allowed") {
 				shouldListenForWakeRef.current = false;
+				isWakeListeningRef.current = false;
 				onWakeListeningChange?.(false);
 				return;
 			}
@@ -210,7 +313,7 @@ function VoiceRecoder({
 
 		return () => {
 			shouldListenForWakeRef.current = false;
-			window.clearTimeout(recordingTimerRef.current);
+			stopSilenceDetection();
 			window.clearTimeout(wakeRestartTimerRef.current);
 			try {
 				recognition.stop();

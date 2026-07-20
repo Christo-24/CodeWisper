@@ -1,5 +1,10 @@
-export default function VoiceButton({ isRecording = false, isWakeListening = false }) {
+export default function VoiceButton({
+  isRecording = false,
+  isWakeListening = false,
+  onTalk,
+}) {
   const currentState = isRecording ? 'listening' : 'idle';
+  const canTalk = typeof onTalk === "function" && !isRecording;
 
   const getStatusText = () => {
     switch (currentState) {
@@ -82,6 +87,32 @@ export default function VoiceButton({ isRecording = false, isWakeListening = fal
           0% { transform: scaleY(0.4); }
           100% { transform: scaleY(1.4); }
         }
+
+        .talk-button {
+          min-width: 112px;
+          height: 42px;
+          padding: 0 18px;
+          border-radius: 8px;
+          border: 1px solid rgba(56, 189, 248, 0.36);
+          background: rgba(4, 20, 44, 0.62);
+          color: rgba(238, 251, 255, 0.92);
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          box-shadow: 0 0 18px rgba(56, 189, 248, 0.16);
+        }
+
+        .talk-button:hover:not(:disabled) {
+          border-color: rgba(56, 189, 248, 0.7);
+          box-shadow: 0 0 26px rgba(56, 189, 248, 0.3);
+          transform: translateY(-1px);
+        }
+
+        .talk-button:disabled {
+          cursor: default;
+          opacity: 0.56;
+        }
       `}</style>
 
       {/* Dynamic Status Text */}
@@ -98,6 +129,16 @@ export default function VoiceButton({ isRecording = false, isWakeListening = fal
           <div className="status-wave-bar" />
         </div>
       </div>
+
+      <button
+        type="button"
+        className="talk-button"
+        onClick={onTalk}
+        disabled={!canTalk}
+        title="Start talking"
+      >
+        {isRecording ? "Listening" : "Talk"}
+      </button>
     </div>
   );
 }

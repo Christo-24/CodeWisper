@@ -14,6 +14,7 @@ function App() {
   const [showLesson, setShowLesson] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isWakeListening, setIsWakeListening] = useState(false);
+  const [startTalk, setStartTalk] = useState(null);
   const [transcript, setTranscript] = useState("");
   const [mentorAnswer, setMentorAnswer] = useState("");
 
@@ -21,6 +22,10 @@ function App() {
     setLessonData(lesson);
     setShowLesson(true);
     setMentorAnswer("");
+  }, []);
+
+  const handleTalkReady = useCallback((handler) => {
+    setStartTalk(() => handler);
   }, []);
 
   return (
@@ -119,6 +124,7 @@ function App() {
           <VoiceButton
             isRecording={isRecording}
             isWakeListening={isWakeListening}
+            onTalk={startTalk}
           />
         </div>
 
@@ -152,6 +158,7 @@ function App() {
           onTranscriptReceived={setTranscript}
           onRecordingChange={setIsRecording}
           onWakeListeningChange={setIsWakeListening}
+          onTalkReady={handleTalkReady}
         />
       </div>
     </div>
